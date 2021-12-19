@@ -21,10 +21,10 @@ const addTransformations = (resource, transformation, secure)=>{
   return transformedURL;
 }
 
-const createCloudinaryNodes = (gatsby, cloudinary, options) => {
+const createCloudinaryNodes = (gatsby, cloudinary, options, transformations) => {
   return new Promise((resolve) => {
     fetchAllResources(cloudinary, options, (resources) => {
-      createNotes(gatsby, resources);
+      createNotes(gatsby, resources, transformations);
       resolve();
     })
   });
@@ -64,12 +64,13 @@ const fetchAllResources = (cloudinary, options, callback) => {
 };
 
 
-const createNotes = (gatsby, resources) => {
+const createNotes = (gatsby, resources, transformations) => {
   resources.forEach(resource => {
-    const transformations = "q_auto,f_auto" // Default CL transformations, todo: fetch base transformations from config maybe.  
 
-    resource.url = addTransformations(resource, transformations);
-    resource.secure_url = addTransformations(resource, transformations, true);
+    if (transformations) {
+      resource.url = addTransformations(resource, transformations);
+      resource.secure_url = addTransformations(resource, transformations, true);
+    }
 
     const nodeData = getNodeData(gatsby, resource);
     gatsby.actions.createNode(nodeData);
@@ -83,6 +84,7 @@ const createNotes = (gatsby, resources) => {
 exports.sourceNodes = (gatsby, options) => {
   const cloudinary = newCloudinary(options);
   const resourceOptions = getResourceOptions(options);
+  const transformations = options.transformations;
 
-  return createCloudinaryNodes(gatsby, cloudinary, resourceOptions);
+  return createCloudinaryNodes(gatsby, cloudinary, resourceOptions, transformations);
 };
